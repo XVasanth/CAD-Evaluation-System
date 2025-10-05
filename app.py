@@ -301,7 +301,12 @@ def submit_experiment_tab(user):
                             )
                             
                             # Delete student submission file
-                            managers['files'].delete_student_submission(submission_path)
+                            # Delete student submission file
+                            success, message = managers['files'].delete_student_submission(submission_path)
+                            if success:
+                                st.success(f"✅ Submission file deleted: {message}")
+                            else:
+                                st.warning(f"⚠️ File deletion issue: {message}")
                             
                             # Clean up temp PDF
                             os.unlink(temp_pdf.name)
