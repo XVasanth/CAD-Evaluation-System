@@ -91,20 +91,30 @@ class FileManager:
     def delete_student_submission(self, submission_file_path):
         """Delete student submission file after evaluation"""
         try:
-            if submission_file_path and os.path.exists(submission_file_path):
-                os.remove(submission_file_path)
-                
-                # Clean up empty directories
-                parent_dir = Path(submission_file_path).parent
-                if parent_dir.exists() and not any(parent_dir.iterdir()):
-                    parent_dir.rmdir()
-                    
-                return True
-            return False
+            if not submission_file_path:
+                raise Exception("No file path provided")
+            
+            if not os.path.exists(submission_file_path):
+                raise Exception(f"File does not exist: {submission_file_path}")
+            
+            # Delete the file
+            os.remove(submission_file_path)
+            
+            # Clean up empty directories
+            parent_dir = Path(submission_file_path).parent
+            if parent_dir.exists() and not any(parent_dir.iterdir()):
+                parent_dir.rmdir()
+            
+            # Double-check it's really gone
+            if os.path.exists(submission_file_path):
+                raise Exception(f"File still exists after deletion: {submission_file_path}")
+            
+            return True, "File deleted successfully"
             
         except Exception as e:
-            print(f"Warning: Could not delete submission file: {str(e)}")
-            return False
+            error_msg = f"Failed to delete submission file: {str(e)}"
+            print(error_msg)
+            return False, error_msg
     
     def get_experiment_reference_path(self, experiment_id, reference_filename):
         """Get full path to experiment reference model"""
@@ -166,18 +176,19 @@ class FileManager:
     
     def validate_cad_file(self, file_path):
         """Validate CAD file format"""
-        valid_extensions = ['.obj', '.stl', '.ply', '.off', '.STEP']
+        valid_extensions = ['.obj', '.stl', '.ply', '.off', '.step', '.stp']
         ext = Path(file_path).suffix.lower()
         
         if ext not in valid_extensions:
             return False, f"Unsupported file format: {ext}"
         
-        # Check file size (max 100MB)
+        # Check file size (max 200MB for STEP, 100MB for others)
         file_size = Path(file_path).stat().st_size
-        max_size = 100 * 1024 * 1024  # 100MB
+        max_size = 200 * 1024 * 1024 if ext in ['.step', '.stp'] else 100 * 1024 * 1024
+        max_size_mb = 200 if ext in ['.step', '.stp'] else 100
         
         if file_size > max_size:
-            return False, f"File too large: {round(file_size/(1024*1024), 2)}MB (max 100MB)"
+            return False, f"File too large: {round(file_size/(1024*1024), 2)}MB (max {max_size_mb}MB)"
         
         return True, "Valid CAD file"
     
