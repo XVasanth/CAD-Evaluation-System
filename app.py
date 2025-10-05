@@ -442,8 +442,8 @@ def create_experiment_tab(user):
         col1, col2 = st.columns(2)
         
         with col1:
-            exp_code = st.text_input("Experiment Code*", placeholder="EXP001")
-            exp_name = st.text_input("Experiment Name*", placeholder="Flange Design")
+            exp_code = st.text_input("Experiment Name*", placeholder="EXP001")
+            exp_name = st.text_input("Part Name*", placeholder="Flange Design")
             deadline = st.date_input("Deadline (Optional)")
         
         with col2:
