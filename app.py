@@ -223,8 +223,8 @@ def submit_experiment_tab(user):
         st.markdown("---")
         uploaded_file = st.file_uploader(
             "Upload Your CAD Model",
-            type=['obj', 'stl', 'ply', 'off', 'STEP'],
-            help="Supported formats: OBJ, STL, PLY, OFF (Max 100MB)"
+            type=['obj', 'stl', 'ply', 'off', 'step', 'stp', 'STEP', 'STP'],
+            help="Supported formats: OBJ, STL, PLY, OFF, STEP (Max 200MB)"
         )
         
         if uploaded_file:
@@ -339,6 +339,13 @@ def submit_experiment_tab(user):
                             # Show feedback
                             with st.expander("📝 Detailed Feedback", expanded=True):
                                 st.text(eval_results['feedback'])
+                            
+                            # Show 3D visualization heatmap
+                            if 'heatmap' in eval_results:
+                                st.markdown("---")
+                                st.subheader("🎨 3D Accuracy Visualization")
+                                st.plotly_chart(eval_results['heatmap'], use_container_width=True)
+                                st.info("🔍 Red areas = higher deviation, Green areas = better accuracy. Rotate and zoom with mouse.")
                         
                         else:
                             st.error(f"Evaluation failed: {eval_results.get('error', 'Unknown error')}")
@@ -442,8 +449,8 @@ def create_experiment_tab(user):
         col1, col2 = st.columns(2)
         
         with col1:
-            exp_code = st.text_input("Experiment Name*", placeholder="EXP001")
-            exp_name = st.text_input("Part Name*", placeholder="Flange Design")
+            exp_code = st.text_input("Experiment Code*", placeholder="EXP001")
+            exp_name = st.text_input("Experiment Name*", placeholder="Flange Design")
             deadline = st.date_input("Deadline (Optional)")
         
         with col2:
