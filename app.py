@@ -103,10 +103,6 @@ def login_page():
             if st.button("Register", use_container_width=True):
                 st.session_state.page = 'register'
                 st.rerun()
-        
-        # Default credentials info
-        with st.expander("ℹ️ Default Admin Credentials"):
-            st.info("**Username:** admin\n\n**Password:** admin123")
 
 def register_page():
     """Registration page"""
@@ -455,7 +451,7 @@ def create_experiment_tab(user):
             
         reference_file = st.file_uploader(
             "Upload Reference CAD Model*",
-            type=['obj', 'stl', 'ply', 'off'],
+            type=['obj', 'stl', 'ply', 'off', 'step', 'stp', 'STEP', 'STP'],
             help="This is the correct model that students will be evaluated against"
         )
         
