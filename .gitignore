@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# CAD Evaluation System
+*.db
+*.sqlite
+data/submissions/*
+data/reports/*
+!data/submissions/.gitkeep
+!data/reports/.gitkeep
+__pycache__/
+*.pyc
+.env
+.streamlit/secrets.toml
