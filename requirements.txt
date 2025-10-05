@@ -11,3 +11,4 @@ reportlab
 bcrypt
 python-multipart
 cascadio
+pymeshlab
