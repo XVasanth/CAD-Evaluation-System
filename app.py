@@ -105,8 +105,8 @@ def login_page():
                 st.rerun()
         
         # Default credentials info
-        # with st.expander("ℹ️ Default Admin Credentials"):
-        #     st.info("**Username:** admin\n\n**Password:** admin123")
+        with st.expander("ℹ️ Default Admin Credentials"):
+            st.info("**Username:** admin\n\n**Password:** admin123")
 
 def register_page():
     """Registration page"""
@@ -227,8 +227,8 @@ def submit_experiment_tab(user):
         st.markdown("---")
         uploaded_file = st.file_uploader(
             "Upload Your CAD Model",
-            type=['obj', 'stl', 'ply', 'off', 'STEP', 'STP'],
-            help="Supported formats: (Max 100kB)"
+            type=['obj', 'stl', 'ply', 'off'],
+            help="Supported formats: OBJ, STL, PLY, OFF (Max 100MB)"
         )
         
         if uploaded_file:
@@ -301,12 +301,16 @@ def submit_experiment_tab(user):
                             )
                             
                             # Delete student submission file
-                            # Delete student submission file
                             success, message = managers['files'].delete_student_submission(submission_path)
-                            if success:
-                                st.success(f"✅ Submission file deleted: {message}")
-                            else:
-                                st.warning(f"⚠️ File deletion issue: {message}")
+                            
+                            # If STEP file, also delete converted OBJ
+                            if submission_path.lower().endswith(('.step', '.stp')):
+                                converted_path = submission_path.replace('.step', '.obj').replace('.stp', '.obj').replace('.STEP', '.obj').replace('.STP', '.obj')
+                                if os.path.exists(converted_path):
+                                    try:
+                                        os.remove(converted_path)
+                                    except Exception as e:
+                                        st.warning(f"Could not delete converted file: {str(e)}")
                             
                             # Clean up temp PDF
                             os.unlink(temp_pdf.name)
@@ -442,8 +446,8 @@ def create_experiment_tab(user):
         col1, col2 = st.columns(2)
         
         with col1:
-            exp_code = st.text_input("Experiment Name*", placeholder="Eg: Flange Coupling")
-            exp_name = st.text_input("Part Name*", placeholder="Eg: Flange")
+            exp_code = st.text_input("Experiment Code*", placeholder="EXP001")
+            exp_name = st.text_input("Experiment Name*", placeholder="Flange Design")
             deadline = st.date_input("Deadline (Optional)")
         
         with col2:
@@ -451,7 +455,7 @@ def create_experiment_tab(user):
             
         reference_file = st.file_uploader(
             "Upload Reference CAD Model*",
-            type=['obj', 'stl', 'ply', 'off','STEP'],
+            type=['obj', 'stl', 'ply', 'off'],
             help="This is the correct model that students will be evaluated against"
         )
         
