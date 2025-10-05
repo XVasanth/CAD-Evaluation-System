@@ -25,9 +25,72 @@ class CADEvaluator:
             'F': (0, 64)
         }
     
-    def load_mesh(self, file_path):
-        """Load mesh from file"""
+    def convert_step_to_mesh(self, step_file, output_file=None):
+        """Convert STEP file to mesh format using cascadio"""
         try:
+            import cascadio
+            import tempfile
+            
+            if output_file is None:
+                output_file = step_file.replace('.step', '.obj').replace('.stp', '.obj').replace('.STEP', '.obj').replace('.STP', '.obj')
+            
+            # Create temporary GLB file
+            with tempfile.NamedTemporaryFile(suffix='.glb', delete=False) as tmp_glb:
+                temp_glb_path = tmp_glb.name
+            
+            try:
+                # Convert STEP to GLB
+                result = cascadio.step_to_glb(
+                    input_path=step_file,
+                    output_path=temp_glb_path,
+                    tol_linear=0.01,
+                    tol_angular=0.5,
+                    tol_relative=False,
+                    merge_primitives=True,
+                    use_parallel=True
+                )
+                
+                if result != 0:
+                    raise Exception(f"cascadio conversion failed with code: {result}")
+                
+                # Load with trimesh and export
+                loaded = trimesh.load(temp_glb_path)
+                
+                if isinstance(loaded, trimesh.Scene):
+                    if len(loaded.geometry) == 0:
+                        raise Exception("No geometry in converted file")
+                    elif len(loaded.geometry) == 1:
+                        mesh = list(loaded.geometry.values())[0]
+                    else:
+                        mesh = loaded.dump(concatenate=True)
+                else:
+                    mesh = loaded
+                
+                mesh.export(output_file)
+                return output_file
+                
+            finally:
+                try:
+                    import os
+                    os.unlink(temp_glb_path)
+                except:
+                    pass
+                    
+        except ImportError:
+            raise Exception("cascadio not installed. STEP conversion unavailable.")
+        except Exception as e:
+            raise Exception(f"Error converting STEP file: {str(e)}")
+    
+    def load_mesh(self, file_path):
+        """Load mesh from file, converting STEP if necessary"""
+        try:
+            # Check if STEP file
+            if file_path.lower().endswith(('.step', '.stp')):
+                # Convert to OBJ first
+                converted_path = file_path.replace('.step', '.obj').replace('.stp', '.obj').replace('.STEP', '.obj').replace('.STP', '.obj')
+                self.convert_step_to_mesh(file_path, converted_path)
+                file_path = converted_path
+            
             loaded = trimesh.load(file_path)
             
             if isinstance(loaded, trimesh.Scene):
