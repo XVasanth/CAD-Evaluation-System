@@ -166,7 +166,7 @@ class FileManager:
     
     def validate_cad_file(self, file_path):
         """Validate CAD file format"""
-        valid_extensions = ['.obj', '.stl', '.ply', '.off', '.step', '.stp', 'STEP', 'STP']
+        valid_extensions = ['.obj', '.stl', '.ply', '.off', '.step', '.stp', '.STEP', '.STP']
         ext = Path(file_path).suffix.lower()
         
         if ext not in valid_extensions:
