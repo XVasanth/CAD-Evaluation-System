@@ -2,6 +2,8 @@ import numpy as np
 import trimesh
 from sklearn.neighbors import NearestNeighbors
 from typing import Dict, Any
+import plotly.graph_objects as go
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -24,6 +26,93 @@ class CADEvaluator:
             'D': (65, 74),
             'F': (0, 64)
         }
+    
+    def repair_mesh_with_meshlab(self, mesh_file, output_file=None):
+        """Repair mesh using PyMeshLab to make it watertight"""
+        try:
+            import pymeshlab
+            
+            if output_file is None:
+                name, ext = os.path.splitext(mesh_file)
+                output_file = f"{name}_repaired{ext}"
+            
+            ms = pymeshlab.MeshSet()
+            ms.load_new_mesh(mesh_file)
+            
+            # Apply repair filters
+            try:
+                ms.meshing_remove_duplicate_vertices()
+            except:
+                pass
+            try:
+                ms.meshing_remove_duplicate_faces()
+            except:
+                pass
+            try:
+                ms.meshing_remove_unreferenced_vertices()
+            except:
+                pass
+            try:
+                ms.meshing_repair_non_manifold_edges()
+            except:
+                pass
+            try:
+                ms.meshing_close_holes(maxholesize=30)
+            except:
+                pass
+            try:
+                ms.meshing_remove_null_faces()
+            except:
+                pass
+            try:
+                ms.meshing_re_orient_faces_coherently()
+            except:
+                pass
+            
+            ms.save_current_mesh(output_file)
+            return output_file
+            
+        except ImportError:
+            return mesh_file
+        except Exception as e:
+            return mesh_file
+    
+    def create_evaluation_heatmap(self, points, deviations, title="Geometric Accuracy Heatmap"):
+        """Create interactive 3D heatmap showing areas of deviation"""
+        
+        fig = go.Figure(data=[go.Scatter3d(
+            x=points[:, 0],
+            y=points[:, 1], 
+            z=points[:, 2],
+            mode='markers',
+            marker=dict(
+                size=4,
+                color=deviations,
+                colorscale='RdYlGn_r',
+                opacity=0.8,
+                colorbar=dict(
+                    title="Deviation"
+                ),
+                cmin=0,
+                cmax=np.percentile(deviations, 95)
+            ),
+            text=[f'Deviation: {d:.4f}' for d in deviations],
+            hovertemplate='<b>Point Accuracy</b><br>X: %{x:.3f}<br>Y: %{y:.3f}<br>Z: %{z:.3f}<br>%{text}<extra></extra>'
+        )])
+        
+        fig.update_layout(
+            title=title,
+            scene=dict(
+                xaxis_title='X',
+                yaxis_title='Y', 
+                zaxis_title='Z',
+                camera=dict(eye=dict(x=1.5, y=1.5, z=1.5))
+            ),
+            width=900,
+            height=700
+        )
+        
+        return fig
     
     def convert_step_to_mesh(self, step_file, output_file=None):
         """Convert STEP file to mesh format using cascadio"""
@@ -276,9 +365,14 @@ Grade: {grading_results['letter_grade']} ({grading_results['numerical_score']}%)
         
         return feedback
     
-    def evaluate(self, teacher_model_path, student_model_path, num_points=2048):
+    def evaluate(self, teacher_model_path, student_model_path, num_points=2048, repair_mesh=False):
         """Complete evaluation workflow"""
         try:
+            # Optional mesh repair
+            if repair_mesh:
+                teacher_model_path = self.repair_mesh_with_meshlab(teacher_model_path)
+                student_model_path = self.repair_mesh_with_meshlab(student_model_path)
+            
             # Load meshes
             teacher_mesh = self.load_mesh(teacher_model_path)
             student_mesh = self.load_mesh(student_model_path)
@@ -298,13 +392,21 @@ Grade: {grading_results['letter_grade']} ({grading_results['numerical_score']}%)
             # Generate feedback
             feedback = self.generate_feedback(grading_results, geometric_results)
             
+            # Create 3D heatmap visualization
+            heatmap = self.create_evaluation_heatmap(
+                student_points,
+                geometric_results['teacher_to_student_distances'],
+                f"Geometric Accuracy - Grade: {grading_results['letter_grade']}"
+            )
+            
             return {
                 'success': True,
                 'grade': grading_results,
                 'geometric_analysis': geometric_results,
                 'feedback': feedback,
                 'teacher_points': teacher_points,
-                'student_points': student_points
+                'student_points': student_points,
+                'heatmap': heatmap
             }
             
         except Exception as e:
