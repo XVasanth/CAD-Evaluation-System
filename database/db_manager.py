@@ -41,7 +41,7 @@ class DatabaseManager:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS experiments (
                 experiment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                experiment_code TEXT UNIQUE NOT NULL,
+                experiment_code TEXT NOT NULL,
                 experiment_name TEXT NOT NULL,
                 description TEXT,
                 reference_model_path TEXT NOT NULL,
