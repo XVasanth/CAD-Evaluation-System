@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 
 # Import utilities
-from database.db_manager import DatabaseManager
 from utils.cad_evaluator import CADEvaluator
 from utils.pdf_generator import PDFReportGenerator
 from utils.file_manager import FileManager
