@@ -10,3 +10,4 @@ Pillow
 reportlab
 bcrypt
 python-multipart
+cascadio
