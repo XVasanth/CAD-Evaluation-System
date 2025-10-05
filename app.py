@@ -446,7 +446,7 @@ def create_experiment_tab(user):
             
         reference_file = st.file_uploader(
             "Upload Reference CAD Model*",
-            type=['obj', 'stl', 'ply', 'off'],
+            type=['obj', 'stl', 'ply', 'off','STEP'],
             help="This is the correct model that students will be evaluated against"
         )
         
