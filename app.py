@@ -223,7 +223,7 @@ def submit_experiment_tab(user):
         st.markdown("---")
         uploaded_file = st.file_uploader(
             "Upload Your CAD Model",
-            type=['obj', 'stl', 'ply', 'off'],
+            type=['obj', 'stl', 'ply', 'off', 'STEP'],
             help="Supported formats: OBJ, STL, PLY, OFF (Max 100MB)"
         )
         
