@@ -105,8 +105,8 @@ def login_page():
                 st.rerun()
         
         # Default credentials info
-        with st.expander("ℹ️ Default Admin Credentials"):
-            st.info("**Username:** admin\n\n**Password:** admin123")
+        # with st.expander("ℹ️ Default Admin Credentials"):
+        #     st.info("**Username:** admin\n\n**Password:** admin123")
 
 def register_page():
     """Registration page"""
