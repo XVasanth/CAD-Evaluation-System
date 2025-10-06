@@ -426,10 +426,11 @@ def faculty_dashboard():
             st.rerun()
     
     # Tabs
-    tab1, tab2, tab3 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
         "📤 Create Experiment",
         "📊 View All Results",
-        "⚙️ Manage Experiments"
+        "⚙️ Manage Experiments",
+        "👥 Manage Users"
     ])
     
     with tab1:
@@ -440,6 +441,9 @@ def faculty_dashboard():
     
     with tab3:
         manage_experiments_tab(user)
+    
+    with tab4:
+        manage_users_tab(user)
 
 def create_experiment_tab(user):
     """Create new experiment tab"""
@@ -619,6 +623,75 @@ def manage_experiments_tab(user):
             
             if exp['description']:
                 st.write(f"**Description:** {exp['description']}")
+
+def manage_users_tab(user):
+    """Manage users tab - reset passwords, view users"""
+    st.subheader("👥 User Management")
+    
+    # Get all students
+    students = managers['db'].get_all_students()
+    
+    if not students:
+        st.info("No students registered yet.")
+        return
+    
+    st.write(f"**Total Students:** {len(students)}")
+    st.markdown("---")
+    
+    # Search/filter
+    search = st.text_input("🔍 Search by name or username", "")
+    
+    if search:
+        students = [s for s in students if 
+                   search.lower() in s['full_name'].lower() or 
+                   search.lower() in s['username'].lower()]
+    
+    # Display students with reset option
+    for student in students:
+        with st.expander(f"👤 {student['full_name']} ({student['username']})"):
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                st.write(f"**Email:** {student['email']}")
+                st.write(f"**Department:** {student.get('department', 'N/A')}")
+                st.write(f"**Registered:** {student['created_at']}")
+            
+            with col2:
+                st.write("**Actions:**")
+                
+                # Password reset section
+                with st.form(f"reset_form_{student['user_id']}"):
+                    new_password = st.text_input(
+                        "New Password",
+                        type="password",
+                        key=f"pwd_{student['user_id']}"
+                    )
+                    confirm_password = st.text_input(
+                        "Confirm Password",
+                        type="password",
+                        key=f"confirm_{student['user_id']}"
+                    )
+                    
+                    submit = st.form_submit_button("🔐 Reset Password")
+                    
+                    if submit:
+                        if not new_password:
+                            st.error("Password cannot be empty")
+                        elif len(new_password) < 6:
+                            st.error("Password must be at least 6 characters")
+                        elif new_password != confirm_password:
+                            st.error("Passwords do not match")
+                        else:
+                            success, message = managers['db'].reset_user_password(
+                                student['user_id'],
+                                new_password
+                            )
+                            if success:
+                                st.success(f"✅ Password reset successfully!")
+                                st.info(f"**New password:** {new_password}")
+                                st.warning("⚠️ Share this password with the student securely and advise them to change it after login.")
+                            else:
+                                st.error(f"Failed to reset password: {message}")
 
 # ============== MAIN APP ROUTING ==============
 
